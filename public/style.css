@@ -15,7 +15,7 @@ body {
 
 /* Glassmorphism effects */
 .glass-panel {
-  background: rgba(69, 180, 78, 0.7);
+  background: rgba(202, 209, 101, 0.7);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(161, 80, 172, 0.08);
@@ -24,7 +24,8 @@ body {
 .glass-card {
   background: rgba(121, 33, 133, 0.55);
   backdrop-filter: blur(8px);
-  border: 1px solid rgba(182, 79, 165, 0.06);
+  border: 1px solid rgba(182, 219, 14, 0.06);
+  
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
