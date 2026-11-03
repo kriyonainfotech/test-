@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>User CRUD Dashboard</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+            }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col antialiased selection:bg-indigo-500 selection:text-white">
+
+  <!-- Background decorative glows -->
+  <div class="fixed top-0 left-1/4 w-96 h-96 bg-indigo-600/10 rounded-full blur-3xl pointer-events-none -z-10"></div>
+  <div class="fixed bottom-0 right-1/4 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl pointer-events-none -z-10"></div>
+
+  <!-- NAVBAR -->
+  <header class="sticky top-0 z-40 glass-panel border-b border-slate-800/80">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      
+      <!-- Logo & Brand -->
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center shadow-lg shadow-indigo-500/25">
+          <i class="fa-solid fa-users text-white text-lg"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="font-bold text-lg text-white tracking-tight">User<span class="text-indigo-400">CRUD</span></h1>
+            <span class="text-[11px] font-semibold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-2 py-0.5 rounded-full">v1.0</span>
+          </div>
+          <p class="text-xs text-slate-400 hidden sm:block">RESTful API Management Portal</p>
+        </div>
+      </div>
+
+      <!-- Center: Backend Server Status -->
+      <div class="hidden md:flex items-center gap-2 bg-slate-900/80 border border-slate-800 px-3 py-1.5 rounded-full text-xs">
+        <span id="api-status-dot" class="w-2.5 h-2.5 rounded-full bg-amber-400 pulse-dot"></span>
+        <span id="api-status-text" class="text-slate-300 font-medium">Connecting to API...</span>
+        <button id="btn-api-settings" title="API Settings" class="text-slate-400 hover:text-white ml-1">
+          <i class="fa-solid fa-gear text-xs"></i>
+        </button>
+      </div>
+
+      <!-- Right: Auth controls -->
+      <div class="flex items-center gap-3">
+        <!-- Logged In State (Hidden by default) -->
+        <div id="auth-user-box" class="hidden flex items-center gap-2">
+          <div class="flex items-center gap-2 bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-xl">
+            <div id="auth-avatar" class="w-7 h-7 rounded-full bg-indigo-600 flex items-center justify-center font-bold text-xs text-white uppercase">U</div>
+            <div class="text-left hidden sm:block">
+              <div id="auth-user-name" class="text-xs font-semibold text-slate-200 leading-tight">User</div>
+              <div class="text-[10px] text-emerald-400 font-medium">Logged In</div>
+            </div>
+          </div>
+          <button id="btn-logout" class="text-xs px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition">
+            <i class="fa-solid fa-arrow-right-from-bracket mr-1"></i> Logout
+          </button>
+        </div>
+
+        <!-- Logged Out State -->
+        <div id="auth-guest-box" class="flex items-center gap-2">
+          <button id="btn-open-login" class="text-xs px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-800 font-medium transition">
+            <i class="fa-solid fa-right-to-bracket mr-1.5 text-indigo-400"></i> Login
+          </button>
+          <button id="btn-open-register" class="text-xs px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold transition shadow-md shadow-indigo-600/30">
+            <i class="fa-solid fa-user-plus mr-1.5"></i> Register
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTAINER -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full space-y-6">
+
+    <!-- HERO / STATS CARDS -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      
+      <!-- Card 1: Total Users -->
+      <div class="glass-card rounded-2xl p-4 flex items-center justify-between">
+        <div>
+          <p class="text-xs font-medium text-slate-400 uppercase tracking-wider">Total Users</p>
+          <h3 id="stat-total-users" class="text-2xl font-bold text-white mt-1">0</h3>
+          <p class="text-[11px] text-slate-500 mt-1">Registered in MongoDB</p>
+        </div>
+        <div class="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center text-xl">
+          <i class="fa-solid fa-users"></i>
+        </div>
+      </div>
+
+      <!-- Card 2: Filtered / Search -->
+      <div class="glass-card rounded-2xl p-4 flex items-center justify-between">
+        <div>
+          <p class="text-xs font-medium text-slate-400 uppercase tracking-wider">Showing</p>
+          <h3 id="stat-showing-users" class="text-2xl font-bold text-slate-200 mt-1">0</h3>
+          <p id="stat-search-label" class="text-[11px] text-slate-500 mt-1">All users shown</p>
+        </div>
+        <div class="w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center text-xl">
+          <i class="fa-solid fa-filter"></i>
+        </div>
+      </div>
+
+      <!-- Card 3: Auth Status -->
+      <div class="glass-card rounded-2xl p-4 flex items-center justify-between">
+        <div>
+          <p class="text-xs font-medium text-slate-400 uppercase tracking-wider">Auth Status</p>
+          <h3 id="stat-auth-status" class="text-base font-bold text-slate-300 mt-1">Guest</h3>
+          <p id="stat-auth-desc" class="text-[11px] text-slate-500 mt-1">Login for delete permissions</p>
+        </div>
+        <div id="stat-auth-icon" class="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center text-xl">
+          <i class="fa-solid fa-shield-halved"></i>
+        </div>
+      </div>
+
+      <!-- Card 4: Quick Action -->
+      <div class="glass-card rounded-2xl p-4 flex items-center justify-between bg-gradient-to-br from-indigo-950/60 to-slate-900 border-indigo-500/30">
+        <div>
+          <p class="text-xs font-medium text-indigo-300 uppercase tracking-wider">Quick Action</p>
+          <h3 class="text-lg font-bold text-white mt-1">Create User</h3>
+          <p class="text-[11px] text-indigo-300/70 mt-1">Add user to database</p>
+        </div>
+        <button id="btn-open-create-user-hero" class="w-11 h-11 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white flex items-center justify-center shadow-lg shadow-indigo-600/40 transition">
+          <i class="fa-solid fa-plus text-base"></i>
+        </button>
+      </div>
+
+    </div>
+
+    <!-- TOOLBAR & FILTERS -->
+    <div class="glass-panel rounded-2xl p-4 border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      
+      <!-- Search Input -->
+      <div class="relative flex-1">
+        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+        <input 
+          type="text" 
+          id="search-input" 
+          placeholder="Search by name, email, or phone number..." 
+          class="w-full pl-10 pr-10 py-2.5 bg-slate-900/90 border border-slate-700/80 rounded-xl text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition"
+        >
+        <button id="search-clear-btn" class="hidden absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Filter, Sort, View Controls -->
+      <div class="flex items-center gap-2 flex-wrap">
+        
+        <!-- Sort Dropdown -->
+        <div class="flex items-center gap-1.5 bg-slate-900 border border-slate-800 rounded-xl px-2.5 py-1.5">
+          <i class="fa-solid fa-arrow-down-wide-short text-slate-400 text-xs"></i>
+          <select id="sort-select" class="bg-transparent text-xs text-slate-200 focus:outline-none cursor-pointer pr-1">
+            <option value="newest" class="bg-slate-900 text-slate-200">Newest First</option>
+            <option value="oldest" class="bg-slate-900 text-slate-200">Oldest First</option>
+            <option value="name-asc" class="bg-slate-900 text-slate-200">Name (A-Z)</option>
+            <option value="name-desc" class="bg-slate-900 text-slate-200">Name (Z-A)</option>
+          </select>
+        </div>
+
+        <!-- View Switcher (Table vs Grid) -->
+        <div class="flex items-center bg-slate-900 border border-slate-800 rounded-xl p-1">
+          <button id="view-mode-table" title="Table View" class="px-2.5 py-1 rounded-lg text-xs font-medium transition bg-indigo-600 text-white">
+            <i class="fa-solid fa-table-list"></i>
+          </button>
+          <button id="view-mode-grid" title="Grid View" class="px-2.5 py-1 rounded-lg text-xs font-medium transition text-slate-400 hover:text-slate-200">
+            <i class="fa-solid fa-grip"></i>
+          </button>
+        </div>
+
+        <!-- Refresh Button -->
+        <button id="btn-refresh" title="Reload Users" class="px-3 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white rounded-xl text-xs font-medium transition flex items-center gap-1.5">
+          <i id="refresh-icon" class="fa-solid fa-rotate-right"></i>
+          <span class="hidden sm:inline">Refresh</span>
+        </button>
+
+        <!-- Add User Button -->
+        <button id="btn-open-create-user" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold shadow-md shadow-indigo-600/30 transition flex items-center gap-2">
+          <i class="fa-solid fa-plus"></i>
+          <span>Add User</span>
+        </button>
+
+      </div>
+    </div>
+
+    <!-- CONTENT DISPLAY AREA -->
+    <div id="content-area" class="relative min-h-[300px]">
+
+      <!-- Loading State -->
+      <div id="loading-state" class="py-16 flex flex-col items-center justify-center space-y-4">
+        <div class="w-12 h-12 border-4 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin"></div>
+        <p class="text-sm text-slate-400 font-medium">Fetching users from MongoDB...</p>
+      </div>
+
+      <!-- Empty / Error State (hidden by default) -->
+      <div id="empty-state" class="hidden py-16 flex flex-col items-center justify-center text-center px-4">
+        <div class="w-20 h-20 rounded-3xl bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-500 text-3xl mb-4">
+          <i class="fa-regular fa-folder-open"></i>
+        </div>
+        <h3 id="empty-state-title" class="text-lg font-semibold text-white">No Users Found</h3>
+        <p id="empty-state-desc" class="text-sm text-slate-400 max-w-sm mt-1">There are no user records matching your current filter or database.</p>
+        <button id="btn-empty-add-user" class="mt-5 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-xl shadow transition">
+          <i class="fa-solid fa-plus mr-1.5"></i> Add First User
+        </button>
+      </div>
+
+      <!-- TABLE VIEW -->
+      <div id="table-view-container" class="hidden overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/60 backdrop-blur-md">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse text-sm">
+            <thead>
+              <tr class="border-b border-slate-800 bg-slate-900/80 text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                <th class="py-3.5 px-4">User</th>
+                <th class="py-3.5 px-4">Email</th>
+                <th class="py-3.5 px-4">Phone</th>
+                <th class="py-3.5 px-4">MongoDB ID</th>
+                <th class="py-3.5 px-4 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="users-table-body" class="divide-y divide-slate-800/60">
+              <!-- Rendered dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- GRID VIEW -->
+      <div id="grid-view-container" class="hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <!-- Rendered dynamically -->
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="glass-panel border-t border-slate-800/80 py-4 mt-auto">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-500">
+      <div class="flex items-center gap-2">
+        <span>UserCRUD REST API Client</span>
+        <span>•</span>
+        <span class="text-slate-400">Node.js + Express + Mongoose</span>
+      </div>
+      <div class="flex items-center gap-4">
+        <span id="footer-active-url" class="font-mono text-[11px] text-slate-400">API: /api/user</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ==================== MODALS ==================== -->
+
+  <!-- MODAL: ADD USER -->
+  <div id="modal-add-user" class="modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+    <div class="modal-content-box w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden">
+      <!-- Modal Header -->
+      <div class="px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-900/50">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-lg bg-indigo-600/20 text-indigo-400 flex items-center justify-center text-sm">
+            <i class="fa-solid fa-user-plus"></i>
+          </div>
+          <div>
+            <h3 class="font-semibold text-white text-base">Add New User</h3>
+            <p class="text-xs text-slate-400">Create a user record in the database</p>
+          </div>
+        </div>
+        <button class="modal-close-btn text-slate-400 hover:text-white transition">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <!-- Form -->
+      <form id="form-add-user" class="p-6 space-y-4">
+        <div>
+          <label class="block text-xs font-medium text-slate-300 mb-1.5">Full Name *</label>
+          <div class="relative">
+            <i class="fa-regular fa-user absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+            <input type="text" id="add-name" required placeholder="e.g. John Doe" class="w-full pl-9 pr-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-slate-300 mb-1.5">Email Address *</label>
+          <div class="relative">
+            <i class="fa-regular fa-envelope absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+            <input type="email" id="add-email" required placeholder="john@example.com" class="w-full pl-9 pr-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-slate-300 mb-1.5">Phone Number</label>
+          <div class="relative">
+            <i class="fa-solid fa-phone absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+            <input type="tel" id="add-phone" placeholder="e.g. 9876543210" class="w-full pl-9 pr-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-slate-300 mb-1.5">Password *</label>
+          <div class="relative">
+            <i class="fa-solid fa-lock absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+            <input type="password" id="add-password" required placeholder="••••••••" class="w-full pl-9 pr-10 py-2 bg-slate-950 border border-slate-800 rounded-xl text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500">
+            <button type="button" class="toggle-password-btn absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300">
+              <i class="fa-regular fa-eye text-xs"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="pt-2 flex items-center justify-end gap-3">
+          <button type="button" class="modal-close-btn px-4 py-2 rounded-xl border border-slate-800 text-xs font-medium text-slate-400 hover:text-white transition">Cancel</button>
+          <button type="submit" id="btn-submit-add-user" class="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-md shadow-indigo-600/30 transition flex items-center gap-2">
+            <span>Create User</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: EDIT USER -->
+  <div id="modal-edit-user" class="modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+    <div class="modal-content-box w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden">
+      <!-- Modal Header -->
+      <div class="px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-900/50">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-lg bg-amber-600/20 text-amber-400 flex items-center justify-center text-sm">
+            <i class="fa-solid fa-user-pen"></i>
+          </div>
+          <div>
+            <h3 class="font-semibold text-white text-base">Edit User</h3>
+            <p class="text-xs text-slate-400">Update existing user details</p>
+          </div>
+        </div>
+        <button class="modal-close-btn text-slate-400 hover:text-white transition">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <!-- Form -->
+      <form id="form-edit-user" class="p-6 space-y-4">
+        <input type="hidden" id="edit-id">
+
+        <div>
+          <label class="block text-xs font-medium text-slate-300 mb-1.5">User ID</label>
+          <input type="text" id="edit-display-id" disabled class="w-full px-3 py-2 bg-slate-950/60 border border-slate-800 rounded-xl text-xs font-mono text-slate-500 cursor-not-allowed">
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-slate-300 mb-1.5">Full Name *</label>
+          <div class="relative">
+            <i class="fa-regular fa-user absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+            <input type="text" id="edit-name" required class="w-full pl-9 pr-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-sm text-slate-100 focus:outline-none focus:border-indigo-500">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-slate-300 mb-1.5">Email Address *</label>
+          <div class="relative">
+            <i class="fa-regular fa-envelope absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+            <input type="email" id="edit-email" required class="w-full pl-9 pr-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-sm text-slate-100 focus:outline-none focus:border-indigo-500">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-slate-300 mb-1.5">Phone Number</label>
+          <div class="relative">
+            <i class="fa-solid fa-phone absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+            <input type="tel" id="edit-phone" class="w-full pl-9 pr-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-sm text-slate-100 focus:outline-none focus:border-indigo-500">
+          </div>
+        </div>
+
+        <div class="pt-2 flex items-center justify-end gap-3">
+          <button type="button" class="modal-close-btn px-4 py-2 rounded-xl border border-slate-800 text-xs font-medium text-slate-400 hover:text-white transition">Cancel</button>
+          <button type="submit" id="btn-submit-edit-user" class="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-md shadow-indigo-600/30 transition flex items-center gap-2">
+            <span>Update User</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: VIEW USER DETAILS -->
+  <div id="modal-view-user" class="modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+    <div class="modal-content-box w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden">
+      <div class="p-6 border-b border-slate-800 flex items-start justify-between">
+        <div class="flex items-center gap-3">
+          <div id="view-avatar" class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center text-xl font-bold text-white shadow-lg">
+            U
+          </div>
+          <div>
+            <h3 id="view-name" class="text-lg font-bold text-white">User Name</h3>
+            <p id="view-email" class="text-xs text-indigo-400">user@example.com</p>
+          </div>
+        </div>
+        <button class="modal-close-btn text-slate-400 hover:text-white transition">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <div class="p-6 space-y-4 text-xs">
+        <div class="bg-slate-950/60 p-3.5 rounded-xl border border-slate-800">
+          <span class="text-slate-500 block mb-1 uppercase font-semibold text-[10px] tracking-wider">User ID</span>
+          <div class="flex items-center justify-between font-mono text-slate-300">
+            <span id="view-id">...</span>
+            <button id="btn-copy-id" class="text-indigo-400 hover:text-indigo-300 ml-2" title="Copy ID">
+              <i class="fa-regular fa-copy"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div class="bg-slate-950/60 p-3.5 rounded-xl border border-slate-800">
+            <span class="text-slate-500 block mb-1 uppercase font-semibold text-[10px] tracking-wider">Phone Number</span>
+            <span id="view-phone" class="font-medium text-slate-200">-</span>
+          </div>
+          <div class="bg-slate-950/60 p-3.5 rounded-xl border border-slate-800">
+            <span class="text-slate-500 block mb-1 uppercase font-semibold text-[10px] tracking-wider">Status</span>
+            <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 font-medium">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Active
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="px-6 py-4 bg-slate-950/40 border-t border-slate-800 flex justify-end gap-2">
+        <button class="modal-close-btn px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold rounded-xl transition">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: LOGIN -->
+  <div id="modal-login" class="modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+    <div class="modal-content-box w-full max-w-sm bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden">
+      <div class="px-6 py-4 border-b border-slate-800 flex items-center justify-between">
+        <h3 class="font-semibold text-white text-base">Sign In</h3>
+        <button class="modal-close-btn text-slate-400 hover:text-white transition">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+      <form id="form-login" class="p-6 space-y-4">
+        <div>
+          <label class="block text-xs font-medium text-slate-300 mb-1.5">Email</label>
+          <input type="email" id="login-email" required placeholder="your@email.com" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-300 mb-1.5">Password</label>
+          <input type="password" id="login-password" required placeholder="••••••••" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500">
+        </div>
+        <p class="text-[11px] text-slate-400">
+          💡 Logging in issues a JWT token required for protected actions like deleting users.
+        </p>
+        <button type="submit" id="btn-submit-login" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-xl shadow-md shadow-indigo-600/30 transition">
+          Login
+        </button>
+        <div class="text-center pt-2">
+          <button type="button" id="btn-switch-to-register" class="text-xs text-indigo-400 hover:text-indigo-300">
+            Don't have an account? Register here
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: REGISTER -->
+  <div id="modal-register" class="modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+    <div class="modal-content-box w-full max-w-sm bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden">
+      <div class="px-6 py-4 border-b border-slate-800 flex items-center justify-between">
+        <h3 class="font-semibold text-white text-base">Create an Account</h3>
+        <button class="modal-close-btn text-slate-400 hover:text-white transition">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+      <form id="form-register" class="p-6 space-y-4">
+        <div>
+          <label class="block text-xs font-medium text-slate-300 mb-1.5">Name</label>
+          <input type="text" id="reg-name" required placeholder="Your Name" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-300 mb-1.5">Email</label>
+          <input type="email" id="reg-email" required placeholder="your@email.com" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-300 mb-1.5">Phone Number</label>
+          <input type="tel" id="reg-phone" placeholder="9876543210" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-300 mb-1.5">Password</label>
+          <input type="password" id="reg-password" required placeholder="••••••••" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500">
+        </div>
+        <button type="submit" id="btn-submit-register" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-xl shadow-md shadow-indigo-600/30 transition">
+          Register & Get Token
+        </button>
+        <div class="text-center pt-2">
+          <button type="button" id="btn-switch-to-login" class="text-xs text-indigo-400 hover:text-indigo-300">
+            Already have an account? Login
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: DELETE CONFIRMATION -->
+  <div id="modal-delete" class="modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+    <div class="modal-content-box w-full max-w-sm bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden p-6 text-center space-y-4">
+      <div class="w-14 h-14 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-500 flex items-center justify-center text-2xl mx-auto">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+      </div>
+      <div>
+        <h3 class="text-base font-bold text-white">Delete User?</h3>
+        <p class="text-xs text-slate-400 mt-1">
+          Are you sure you want to remove <span id="delete-user-name" class="font-semibold text-rose-400">User</span>? This action cannot be undone.
+        </p>
+      </div>
+
+      <!-- Auth warning banner for delete -->
+      <div id="delete-token-banner" class="text-left p-3 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-400">
+        <!-- Filled dynamically -->
+      </div>
+
+      <div class="flex items-center justify-center gap-3 pt-2">
+        <button class="modal-close-btn px-4 py-2 rounded-xl border border-slate-800 text-xs font-medium text-slate-400 hover:text-white transition">Cancel</button>
+        <button id="btn-confirm-delete" class="px-5 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold shadow-md shadow-rose-600/30 transition">
+          Delete Now
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: API SETTINGS -->
+  <div id="modal-api-settings" class="modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+    <div class="modal-content-box w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden">
+      <div class="px-6 py-4 border-b border-slate-800 flex items-center justify-between">
+        <h3 class="font-semibold text-white text-base">API Server Settings</h3>
+        <button class="modal-close-btn text-slate-400 hover:text-white transition">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+      <div class="p-6 space-y-4">
+        <div>
+          <label class="block text-xs font-medium text-slate-300 mb-1.5">API Base URL</label>
+          <input type="text" id="setting-api-url" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs font-mono text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500" placeholder="e.g. http://localhost:5000/api/user">
+          <p class="text-[11px] text-slate-500 mt-1">Default is auto-detected. Adjust if server runs on another port.</p>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-300 mb-1.5">Manual JWT Token (Optional)</label>
+          <textarea id="setting-jwt-token" rows="2" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs font-mono text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500" placeholder="Paste Bearer token here"></textarea>
+        </div>
+        <div class="flex items-center justify-between pt-2">
+          <button id="btn-reset-api-settings" class="text-xs text-indigo-400 hover:text-indigo-300">Reset to Defaults</button>
+          <button id="btn-save-api-settings" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-xl transition">
+            Save & Test
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST CONTAINER -->
+  <div id="toast-container" class="fixed top-20 right-4 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none"></div>
+
+  <!-- Scripts -->
+  <script src="app.js"></script>
+</body>
+</html>
