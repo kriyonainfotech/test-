@@ -2,23 +2,23 @@
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
 
 :root {
-  --primary: #4f46e5;
-  --primary-hover: #4338ca;
+  --primary: #80e546;
+  --primary-hover: #2c5a12;
   --primary-light: #e0e7ff;
 }
 
 body {
   font-family: 'Plus Jakarta Sans', sans-serif;
-  background-color: #0f172a;
+  background-color: #6176a5;
   color: #f1f5f9;
 }
 
 /* Glassmorphism effects */
 .glass-panel {
-  background: rgba(30, 41, 59, 0.7);
+  background: rgba(157, 179, 214, 0.7);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(206, 94, 94, 0.08);
 }
 
 .glass-card {
@@ -30,8 +30,8 @@ body {
 
 .glass-card:hover {
   transform: translateY(-3px);
-  border-color: rgba(99, 102, 241, 0.4);
-  box-shadow: 0 12px 30px -10px rgba(79, 70, 229, 0.25);
+  border-color: rgba(241, 99, 234, 0.4);
+  box-shadow: 0 12px 30px -10px rgba(184, 42, 153, 0.25);
 }
 
 /* Custom scrollbar */
